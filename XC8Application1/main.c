@@ -57,10 +57,9 @@ kiss_fft_cfg cfg;
 
 
 // Protótipos de Funções
+float FFT_SM(double entrada[SAMPLES]);
 void setup();
-double FFT_SM(double entrada[SAMPLES]);
 void loop();
-void analogWrite25k(int value);
 
 struct SensorData {
 	double distance0;
@@ -74,19 +73,6 @@ struct SensorData readSensor();
 void setup() {
 	// Configuração dos pinos
 	DDRB &= ~(1 << proximitySensorPin) & (1 << proximitySensorPin1) & (1 << proximitySensorPin2) & (1 << proximitySensorPin3); // Configura os pinos A0, A1, A2, A3 como saída para leitura dos sensores
-
-	// Configuração Timer1 para PWM
-	/*TCCR1A = (1 << WGM11) | (1 << COM1B1); // Modo de PWM fase corrigida, não invertido em OC1B
-	TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS10); // Prescaler 1
-	ICR1 = 320; // TOP = 320
-
-	// Inicialização de variáveis
-	//int Input = 0;
-	//int Output = 0;
-	//int Setpoint = 0;
-	VelocidadeDesejada = 100; // Substitua por um valor padrão ou leia de alguma entrada
-	currentPWM = 0;
-	*/
 
 	// Inicialização da configuração da FFT
 	
@@ -102,9 +88,13 @@ void Display(){
 		GLCD_InvertScreen();
 		GLCD_Clear();
 		GLCD_GotoXY(5,30);
-		GLCD_PrintDouble(media,3);
+		GLCD_PrintDouble(media,2);
 		GLCD_PrintString(" /");
-		GLCD_PrintDouble(entrada[1],4);
+		GLCD_PrintDouble(entrada[1],2);
+		GLCD_PrintString(" /");
+		GLCD_PrintDouble(frequencySM,2);
+		GLCD_PrintString(" /");
+		GLCD_PrintDouble(VelocidadeAtual,2);
 		GLCD_Render();
 	
 }
@@ -121,9 +111,7 @@ void loop() {
 	// Preencher fin com dados reais (substitua pelos dados do sensor)
 	
 	// FFT
-	//FFT_SM(entrada[SAMPLES]);
-	
-	
+	//double frequencySM = FFT_SM(entrada);	
 
 	// Calcular velocidade atual
 	//VelocidadeAtual = frequencySM * 60.0;
@@ -135,10 +123,6 @@ void loop() {
 	// Se necessário, adicione aqui a lógica para controlar o ventilador com PID
 }
 
-/*
-void analogWrite25k(int value) {
-	OCR1B = value;
-}*/
 
 struct SensorData readSensor() {
 	struct SensorData sensorData ;
@@ -184,15 +168,13 @@ return sensorData;
 
 
 
-/*float FFT_SM(double entrada[SAMPLES]) {
+float FFT_SM(double entrada[SAMPLES]) {
 	// Tamanho da FFT (deve ser uma potência de 2)
 	int nfft = SAMPLES;
 
 	// Matrizes de entrada e saída
 	kiss_fft_cpx fin[nfft];
 	kiss_fft_cpx fout[nfft];
-
-	
 
 
 		// Preencher fin com dados reais (substitua pelos dados do sensor)
@@ -209,7 +191,7 @@ return sensorData;
 	int maxIndex = 1;
 
 	for (int i = 1; i < nfft / 2; ++i) {
-		float magnitude = sqrt((fout[i].r * fout[i].r) +  (fout[i].i * fout[i].i ));
+		float magnitude = sqrt((fout[i].r * fout[i].r));
 		if (magnitude > maxMagnitude) {
 			maxMagnitude = magnitude;
 			maxIndex = i;
@@ -218,17 +200,17 @@ return sensorData;
 
 	// Calcular a frequência correspondente ao pico
 	
-	float frequencyMax = maxIndex * (SAMPLING_FREQUENCY/ nfft);
+	float frequencySM = maxIndex * (SAMPLING_FREQUENCY/ nfft);
 	
-	return frequencyMax;
+	return frequencySM;
 	
-}*/
+}
 
 int main(void){
 	setup();
 	while (1) {
 		loop();
-		_delay_ms(1000);
+		_delay_ms(500);
 	}
 	return 0;
 }
